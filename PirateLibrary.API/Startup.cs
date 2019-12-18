@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using PirateLibrary.API.Services;
 
 namespace PirateLibrary.API
 {
@@ -28,6 +29,9 @@ namespace PirateLibrary.API
             {
                 setupAction.ReturnHttpNotAcceptable = true;
             });
+
+            services.AddScoped<IPirateRepository, PirateRepository>();
+
             services.AddDbContext<PirateLibraryContext>(options =>
             {
                 options.UseSqlite("Data Source=memory;");
@@ -47,10 +51,11 @@ namespace PirateLibrary.API
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapGet("/", async context =>
-                {
-                    await context.Response.WriteAsync("Hello World!");
-                });
+                //endpoints.MapGet("/", async context =>
+                //{
+                //    await context.Response.WriteAsync("Hello World!");
+                //});
+                endpoints.MapControllers();
             });
         }
     }
