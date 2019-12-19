@@ -63,7 +63,7 @@ namespace PirateLibrary.API.Controllers
         {
             if (!service.AuthorExists(authorId))
             {
-                return BadRequest();
+                return NotFound();
             }
 
             var author = service.GetAuthor(authorId);
@@ -76,7 +76,24 @@ namespace PirateLibrary.API.Controllers
             service.Save();
             
             return NoContent();
+         }
 
+        [HttpDelete("{authorId}")]
+        public ActionResult DeleteAuthor(Guid authorId)
+        {
+            if (!service.AuthorExists(authorId))
+            {
+                return NotFound();
+            }
+            var author = service.GetAuthor(authorId);
+            if (author == null)
+            {
+                return NotFound();
+            }
+            service.DeleteAuthor(author);
+            service.Save();
+            
+            return NoContent();
         }
     }
 }
