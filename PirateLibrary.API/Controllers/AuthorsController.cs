@@ -55,7 +55,7 @@ namespace PirateLibrary.API.Controllers
         }
         [HttpGet]
         [Route("count")] //add /count to the existing route
-        public ActionResult Count()
+        public IActionResult Count()
         {
             return Ok(service.Count());
         }
@@ -137,6 +137,12 @@ namespace PirateLibrary.API.Controllers
             }
             return Ok(author);
         }
-    
+
+        [HttpOptions]
+        public IActionResult GetAuthorsOptions()
+        {
+            base.Response.Headers.Add("Allow", "GET, POST, OPTIONS, PATCH, DELETE");
+            return Ok();
+        }
     }
 }
