@@ -103,5 +103,19 @@ namespace PirateLibrary.API.Controllers
             
             return NoContent();
         }
+
+        [HttpGet("{authorId}/testOnly")]
+        public ActionResult GetUnMappedAuthor(Guid authorId)
+        {
+            if (authorId == Guid.Empty)
+            {
+                return BadRequest();
+            }
+            if (!service.AuthorExists(authorId)){
+                return BadRequest();
+            }
+
+            return Ok(service.GetAuthor(authorId));
+        }
     }
 }
