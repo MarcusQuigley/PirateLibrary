@@ -19,12 +19,13 @@ namespace PirateLibrary.API.Controllers
         }
 
         [HttpGet]
+        [HttpHead]
         public ActionResult GetAuthors()
         {
             return Ok(service.GetAuthors());
         }
 
-        [HttpGet("{authorId}",Name ="GetAuthorPath")]
+        [HttpGet("{authorId}",Name ="GetAuthor")]
         public ActionResult<Author> GetAuthor(Guid authorId)
         {
             if (!service.AuthorExists(authorId))
@@ -33,9 +34,15 @@ namespace PirateLibrary.API.Controllers
             }
             return Ok(service.GetAuthor(authorId));
         }
+        [HttpGet]
+        [Route("count")]
+        public ActionResult Count()
+        {
+            return Ok(service.Count());
+        }
 
         [HttpPost]
-        public ActionResult AddAuthor(Author author)
+        public ActionResult<Author> AddAuthor(Author author)
         {
             if (author == null)
             {
@@ -43,7 +50,8 @@ namespace PirateLibrary.API.Controllers
             }
             service.AddAuthor(author);
             service.Save();
-            return Ok();
+            return CreatedAtRoute("GetAuthor",
+                new { authorId = author.Id }, author);
 
         }
 

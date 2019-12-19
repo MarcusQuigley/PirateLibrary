@@ -15,6 +15,16 @@ namespace PirateLibrary.API.Services
             this.context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
+        public bool Save()
+        {
+            return (context.SaveChanges() >= 0);
+        }
+
+        public int Count()
+        {
+            return context.Authors.Count();
+        }
+
         public Author GetAuthor(Guid authorid)
         {
             if (authorid == Guid.Empty)
@@ -48,9 +58,13 @@ namespace PirateLibrary.API.Services
             context.Authors.Add(author);
          }
 
-        public bool Save()
+        public void UpdateAuthor(Author author)
         {
-            return (context.SaveChanges()>=0);
+           //nowt to do
         }
+
+       
+
+       
     }
 }

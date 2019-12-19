@@ -10,6 +10,10 @@ namespace PirateLibrary.API.Services
         Author GetAuthor(Guid authorid);
         IEnumerable<Author> GetAuthors();
         void AddAuthor(Author author);
+
+        void UpdateAuthor(Author author);
         bool Save();
+
+        int Count();
     }
 }
