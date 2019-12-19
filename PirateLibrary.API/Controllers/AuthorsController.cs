@@ -37,12 +37,21 @@ namespace PirateLibrary.API.Controllers
         [HttpGet("{authorId}",Name ="GetAuthor")]
         public ActionResult<AuthorDto> GetAuthor(Guid authorId)
         {
-            if (!service.AuthorExists(authorId))
+            if (authorId == Guid.Empty)
             {
                 return BadRequest();
             }
-            var authorDto = mapper.Map<AuthorDto>(service.GetAuthor(authorId));
-            return Ok(authorDto);
+            if (!service.AuthorExists(authorId))
+            {
+                return NotFound();
+            }
+
+            var author = service.GetAuthor(authorId);
+            if (author == null)
+            {
+                return NotFound();
+            }
+            return Ok(mapper.Map<AuthorDto>(author));
         }
         [HttpGet]
         [Route("count")] //add /count to the existing route
@@ -52,22 +61,24 @@ namespace PirateLibrary.API.Controllers
         }
 
         [HttpPost]
-        public ActionResult<AuthorDto> AddAuthor(AuthorDto author)
+        public ActionResult<AuthorDto> AddAuthor(AuthorForCreationDto author)
         {
             if (author == null)
             {
                 return BadRequest();
             }
             var authorEntity = mapper.Map<Author>(author);
+            
             service.AddAuthor(authorEntity);
             service.Save();
+            var authorDto = mapper.Map<AuthorDto>(authorEntity);
             return CreatedAtRoute("GetAuthor",
-                new { authorId = authorEntity.Id }, author);
+                new { authorId = authorEntity.Id }, authorDto);
 
         }
 
         [HttpPatch("{authorId}")]
-        public ActionResult PatchAuthor(Guid authorId, JsonPatchDocument<Author> patchDocument)
+        public IActionResult PatchAuthor(Guid authorId, JsonPatchDocument<AuthorForUpdateDto> patchDocument)
         {
             if (!service.AuthorExists(authorId))
             {
@@ -79,10 +90,13 @@ namespace PirateLibrary.API.Controllers
             {
                 return NotFound();
             }
-            patchDocument.ApplyTo(author);
+            var authorToPatch = mapper.Map<AuthorForUpdateDto>(author);
+            patchDocument.ApplyTo(authorToPatch);
+
+            mapper.Map(authorToPatch, author);
             service.UpdateAuthor(author);
             service.Save();
-            
+ 
             return NoContent();
          }
 
@@ -111,11 +125,18 @@ namespace PirateLibrary.API.Controllers
             {
                 return BadRequest();
             }
-            if (!service.AuthorExists(authorId)){
-                return BadRequest();
+            if (!service.AuthorExists(authorId))
+            {
+                return NotFound();
             }
 
-            return Ok(service.GetAuthor(authorId));
+            var author = service.GetAuthor(authorId);
+            if (author == null)
+            {
+                return NotFound();
+            }
+            return Ok(author);
         }
+    
     }
 }
