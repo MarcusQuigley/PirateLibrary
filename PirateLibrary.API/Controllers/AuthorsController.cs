@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.JsonPatch;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using PirateLibrary.API.Entities;
+using PirateLibrary.API.Models;
 using PirateLibrary.API.Services;
 using System;
 using System.Collections.Generic;
@@ -14,28 +16,33 @@ namespace PirateLibrary.API.Controllers
     public class AuthorsController : ControllerBase
     {
         readonly IPirateRepository service;
-        public AuthorsController(IPirateRepository service)
+        readonly IMapper mapper;
+        public AuthorsController(IPirateRepository service, IMapper mapper)
         {
             this.service = service ?? throw new ArgumentNullException(nameof(service));
+            this.mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
         [HttpGet]
         [HttpHead] //doesnt return body. Just used to get status code
-        public ActionResult GetAuthors([FromQuery] AuthorsResourceParameters parms)
+        public ActionResult<IEnumerable<AuthorDto>> GetAuthors([FromQuery] AuthorsResourceParameters parms)
            // [FromQuery] string mainCategory, string searchQuery)
            //[FromQuery] states that were passing in a querystring
         {
-            return Ok(service.GetAuthors(parms));
+            var authors = service.GetAuthors(parms);
+            var authorsDto = mapper.Map<IEnumerable<AuthorDto>>(authors);
+            return Ok(authorsDto);
         }
 
         [HttpGet("{authorId}",Name ="GetAuthor")]
-        public ActionResult<Author> GetAuthor(Guid authorId)
+        public ActionResult<AuthorDto> GetAuthor(Guid authorId)
         {
             if (!service.AuthorExists(authorId))
             {
                 return BadRequest();
             }
-            return Ok(service.GetAuthor(authorId));
+            var authorDto = mapper.Map<AuthorDto>(service.GetAuthor(authorId));
+            return Ok(authorDto);
         }
         [HttpGet]
         [Route("count")] //add /count to the existing route
@@ -45,16 +52,17 @@ namespace PirateLibrary.API.Controllers
         }
 
         [HttpPost]
-        public ActionResult<Author> AddAuthor(Author author)
+        public ActionResult<AuthorDto> AddAuthor(AuthorDto author)
         {
             if (author == null)
             {
                 return BadRequest();
             }
-            service.AddAuthor(author);
+            var authorEntity = mapper.Map<Author>(author);
+            service.AddAuthor(authorEntity);
             service.Save();
             return CreatedAtRoute("GetAuthor",
-                new { authorId = author.Id }, author);
+                new { authorId = authorEntity.Id }, author);
 
         }
 
