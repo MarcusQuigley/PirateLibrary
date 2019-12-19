@@ -28,7 +28,14 @@ namespace PirateLibrary.API
             services.AddControllers(setupAction =>
             {
                 setupAction.ReturnHttpNotAcceptable = true;
-            }).AddXmlDataContractSerializerFormatters();
+            })
+                .AddXmlDataContractSerializerFormatters()
+                .AddNewtonsoftJson(setup =>
+                {
+                    setup.SerializerSettings.ContractResolver =
+                    new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver();
+                })
+                ;
 
             services.AddScoped<IPirateRepository, PirateRepository>();
 
