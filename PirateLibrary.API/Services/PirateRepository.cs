@@ -55,13 +55,13 @@ namespace PirateLibrary.API.Services
             }
             if (!string.IsNullOrWhiteSpace(parms.SearchQuery))
             {
-               var searchQuery = parms.SearchQuery.Trim();
+                var searchQuery = parms.SearchQuery.Trim();
                 authors = authors.Where(a => a.MainCategory.Contains(searchQuery)
                 || a.FirstName.Contains(searchQuery)
                 || a.LastName.Contains(searchQuery));
             }
             return authors;
-       }
+        }
 
         public bool AuthorExists(Guid authorId)
         {
@@ -80,15 +80,20 @@ namespace PirateLibrary.API.Services
             }
             author.Id = Guid.NewGuid();
             context.Authors.Add(author);
-         }
+        }
 
         public void UpdateAuthor(Author author)
         {
-           //nowt to do
+            //nowt to do
         }
 
-       
-
-       
+        public void DeleteAuthor(Author author)
+        {
+            if (author == null)
+            {
+                throw new ArgumentNullException(nameof(author));
+            }
+            context.Authors.Remove(author);
+        }
     }
 }

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.JsonPatch;
+using Microsoft.AspNetCore.Mvc;
 using PirateLibrary.API.Entities;
 using PirateLibrary.API.Services;
 using System;
@@ -19,9 +20,10 @@ namespace PirateLibrary.API.Controllers
         }
 
         [HttpGet]
-        [HttpHead]
+        [HttpHead] //doesnt return body. Just used to get status code
         public ActionResult GetAuthors([FromQuery] AuthorsResourceParameters parms)
            // [FromQuery] string mainCategory, string searchQuery)
+           //[FromQuery] states that were passing in a querystring
         {
             return Ok(service.GetAuthors(parms));
         }
@@ -36,7 +38,7 @@ namespace PirateLibrary.API.Controllers
             return Ok(service.GetAuthor(authorId));
         }
         [HttpGet]
-        [Route("count")]
+        [Route("count")] //add /count to the existing route
         public ActionResult Count()
         {
             return Ok(service.Count());
@@ -56,5 +58,42 @@ namespace PirateLibrary.API.Controllers
 
         }
 
+        [HttpPatch("{authorId}")]
+        public ActionResult PatchAuthor(Guid authorId, JsonPatchDocument<Author> patchDocument)
+        {
+            if (!service.AuthorExists(authorId))
+            {
+                return NotFound();
+            }
+
+            var author = service.GetAuthor(authorId);
+            if (authorId == null)
+            {
+                return NotFound();
+            }
+            patchDocument.ApplyTo(author);
+            service.UpdateAuthor(author);
+            service.Save();
+            
+            return NoContent();
+         }
+
+        [HttpDelete("{authorId}")]
+        public ActionResult DeleteAuthor(Guid authorId)
+        {
+            if (!service.AuthorExists(authorId))
+            {
+                return NotFound();
+            }
+            var author = service.GetAuthor(authorId);
+            if (author == null)
+            {
+                return NotFound();
+            }
+            service.DeleteAuthor(author);
+            service.Save();
+            
+            return NoContent();
+        }
     }
 }

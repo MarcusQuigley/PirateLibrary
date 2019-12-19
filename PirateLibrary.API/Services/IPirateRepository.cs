@@ -14,6 +14,7 @@ namespace PirateLibrary.API.Services
         void AddAuthor(Author author);
 
         void UpdateAuthor(Author author);
+        void DeleteAuthor(Author author);
         bool Save();
 
         int Count();
