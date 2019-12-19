@@ -28,7 +28,7 @@ namespace PirateLibrary.API
             services.AddControllers(setupAction =>
             {
                 setupAction.ReturnHttpNotAcceptable = true;
-            });
+            }).AddXmlDataContractSerializerFormatters();
 
             services.AddScoped<IPirateRepository, PirateRepository>();
 

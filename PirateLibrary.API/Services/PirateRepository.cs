@@ -28,5 +28,29 @@ namespace PirateLibrary.API.Services
         {
             return context.Authors;
         }
+
+        public bool AuthorExists(Guid authorId)
+        {
+            if (authorId == Guid.Empty)
+            {
+                throw new ArgumentNullException(nameof(authorId));
+            }
+            return context.Authors.Any(a => a.Id == authorId);
+        }
+
+        public void AddAuthor(Author author)
+        {
+            if (author == null)
+            {
+                throw new ArgumentNullException(nameof(author));
+            }
+            author.Id = Guid.NewGuid();
+            context.Authors.Add(author);
+         }
+
+        public bool Save()
+        {
+            return (context.SaveChanges()>=0);
+        }
     }
 }

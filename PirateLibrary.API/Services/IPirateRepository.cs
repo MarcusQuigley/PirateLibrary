@@ -6,7 +6,10 @@ namespace PirateLibrary.API.Services
 {
     public interface IPirateRepository
     {
+        bool AuthorExists(Guid authorId);
         Author GetAuthor(Guid authorid);
         IEnumerable<Author> GetAuthors();
+        void AddAuthor(Author author);
+        bool Save();
     }
 }

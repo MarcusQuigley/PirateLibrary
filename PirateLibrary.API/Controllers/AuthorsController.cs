@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using PirateLibrary.API.Entities;
 using PirateLibrary.API.Services;
 using System;
 using System.Collections.Generic;
@@ -22,5 +23,29 @@ namespace PirateLibrary.API.Controllers
         {
             return Ok(service.GetAuthors());
         }
+
+        [HttpGet("{authorId}",Name ="GetAuthorPath")]
+        public ActionResult<Author> GetAuthor(Guid authorId)
+        {
+            if (!service.AuthorExists(authorId))
+            {
+                return BadRequest();
+            }
+            return Ok(service.GetAuthor(authorId));
+        }
+
+        [HttpPost]
+        public ActionResult AddAuthor(Author author)
+        {
+            if (author == null)
+            {
+                return BadRequest();
+            }
+            service.AddAuthor(author);
+            service.Save();
+            return Ok();
+
+        }
+
     }
 }
