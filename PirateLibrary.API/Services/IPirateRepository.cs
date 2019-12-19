@@ -9,6 +9,8 @@ namespace PirateLibrary.API.Services
         bool AuthorExists(Guid authorId);
         Author GetAuthor(Guid authorid);
         IEnumerable<Author> GetAuthors();
+
+        IEnumerable<Author> GetAuthors(AuthorsResourceParameters parms);
         void AddAuthor(Author author);
 
         void UpdateAuthor(Author author);

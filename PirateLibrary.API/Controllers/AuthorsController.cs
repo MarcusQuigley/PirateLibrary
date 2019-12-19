@@ -20,9 +20,10 @@ namespace PirateLibrary.API.Controllers
 
         [HttpGet]
         [HttpHead]
-        public ActionResult GetAuthors()
+        public ActionResult GetAuthors([FromQuery] AuthorsResourceParameters parms)
+           // [FromQuery] string mainCategory, string searchQuery)
         {
-            return Ok(service.GetAuthors());
+            return Ok(service.GetAuthors(parms));
         }
 
         [HttpGet("{authorId}",Name ="GetAuthor")]

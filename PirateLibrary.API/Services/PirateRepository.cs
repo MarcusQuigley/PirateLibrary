@@ -39,6 +39,30 @@ namespace PirateLibrary.API.Services
             return context.Authors;
         }
 
+        public IEnumerable<Author> GetAuthors(AuthorsResourceParameters parms)
+        {
+            if (string.IsNullOrWhiteSpace(parms.MainCategory)
+                && string.IsNullOrWhiteSpace(parms.SearchQuery))
+            {
+                return GetAuthors();
+            }
+            var authors = context.Authors as IQueryable<Author>;
+
+            if (!string.IsNullOrWhiteSpace(parms.MainCategory))
+            {
+                var mainCategory = parms.MainCategory.Trim();
+                authors = authors.Where(a => a.MainCategory == mainCategory);
+            }
+            if (!string.IsNullOrWhiteSpace(parms.SearchQuery))
+            {
+               var searchQuery = parms.SearchQuery.Trim();
+                authors = authors.Where(a => a.MainCategory.Contains(searchQuery)
+                || a.FirstName.Contains(searchQuery)
+                || a.LastName.Contains(searchQuery));
+            }
+            return authors;
+       }
+
         public bool AuthorExists(Guid authorId)
         {
             if (authorId == Guid.Empty)
