@@ -1,6 +1,10 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using PirateLibrary.API.Entities;
 using PirateLibrary.API.Models;
 using PirateLibrary.API.Services;
@@ -91,7 +95,11 @@ namespace PirateLibrary.API.Controllers
                 return NotFound();
             }
             var authorToPatch = mapper.Map<AuthorForUpdateDto>(author);
-            patchDocument.ApplyTo(authorToPatch);
+            patchDocument.ApplyTo(authorToPatch, ModelState);
+            if (!TryValidateModel(authorToPatch))
+            {
+                return ValidationProblem(ModelState);
+            }
 
             mapper.Map(authorToPatch, author);
             service.UpdateAuthor(author);
@@ -99,6 +107,20 @@ namespace PirateLibrary.API.Controllers
  
             return NoContent();
          }
+
+        [HttpPut("{authorId}")]
+        public IActionResult UpdateAuthor(Guid authorId, AuthorForUpdateDto author)
+        {
+            if (!service.AuthorExists(authorId))
+            {
+                return BadRequest();
+            }
+
+            var authorEntity = mapper.Map<Entities.Author>(author);
+            service.UpdateAuthor(authorEntity);
+            service.Save();
+            return NoContent();
+        }
 
         [HttpDelete("{authorId}")]
         public ActionResult DeleteAuthor(Guid authorId)
@@ -143,6 +165,15 @@ namespace PirateLibrary.API.Controllers
         {
             base.Response.Headers.Add("Allow", "GET, POST, OPTIONS, PATCH, DELETE");
             return Ok();
+        }
+
+
+        public override ActionResult ValidationProblem(
+            [ActionResultObjectValue] ModelStateDictionary modelStateDictionary)
+        {
+            var options = HttpContext.RequestServices
+                .GetRequiredService<IOptions<ApiBehaviorOptions>>();
+            return (ActionResult)options.Value.InvalidModelStateResponseFactory(ControllerContext);
         }
     }
 }
