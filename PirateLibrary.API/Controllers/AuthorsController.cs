@@ -1,6 +1,10 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using PirateLibrary.API.Entities;
 using PirateLibrary.API.Models;
 using PirateLibrary.API.Services;
@@ -37,37 +41,48 @@ namespace PirateLibrary.API.Controllers
         [HttpGet("{authorId}",Name ="GetAuthor")]
         public ActionResult<AuthorDto> GetAuthor(Guid authorId)
         {
-            if (!service.AuthorExists(authorId))
+            if (authorId == Guid.Empty)
             {
                 return BadRequest();
             }
-            var authorDto = mapper.Map<AuthorDto>(service.GetAuthor(authorId));
-            return Ok(authorDto);
+            if (!service.AuthorExists(authorId))
+            {
+                return NotFound();
+            }
+
+            var author = service.GetAuthor(authorId);
+            if (author == null)
+            {
+                return NotFound();
+            }
+            return Ok(mapper.Map<AuthorDto>(author));
         }
         [HttpGet]
         [Route("count")] //add /count to the existing route
-        public ActionResult Count()
+        public IActionResult Count()
         {
             return Ok(service.Count());
         }
 
         [HttpPost]
-        public ActionResult<AuthorDto> AddAuthor(AuthorDto author)
+        public ActionResult<AuthorDto> AddAuthor(AuthorForCreationDto author)
         {
             if (author == null)
             {
                 return BadRequest();
             }
             var authorEntity = mapper.Map<Author>(author);
+            
             service.AddAuthor(authorEntity);
             service.Save();
+            var authorDto = mapper.Map<AuthorDto>(authorEntity);
             return CreatedAtRoute("GetAuthor",
-                new { authorId = authorEntity.Id }, author);
+                new { authorId = authorEntity.Id }, authorDto);
 
         }
 
         [HttpPatch("{authorId}")]
-        public ActionResult PatchAuthor(Guid authorId, JsonPatchDocument<Author> patchDocument)
+        public IActionResult PatchAuthor(Guid authorId, JsonPatchDocument<AuthorForUpdateDto> patchDocument)
         {
             if (!service.AuthorExists(authorId))
             {
@@ -79,12 +94,33 @@ namespace PirateLibrary.API.Controllers
             {
                 return NotFound();
             }
-            patchDocument.ApplyTo(author);
+            var authorToPatch = mapper.Map<AuthorForUpdateDto>(author);
+            patchDocument.ApplyTo(authorToPatch, ModelState);
+            if (!TryValidateModel(authorToPatch))
+            {
+                return ValidationProblem(ModelState);
+            }
+
+            mapper.Map(authorToPatch, author);
             service.UpdateAuthor(author);
             service.Save();
-            
+ 
             return NoContent();
          }
+
+        [HttpPut("{authorId}")]
+        public IActionResult UpdateAuthor(Guid authorId, AuthorForUpdateDto author)
+        {
+            if (!service.AuthorExists(authorId))
+            {
+                return BadRequest();
+            }
+
+            var authorEntity = mapper.Map<Entities.Author>(author);
+            service.UpdateAuthor(authorEntity);
+            service.Save();
+            return NoContent();
+        }
 
         [HttpDelete("{authorId}")]
         public ActionResult DeleteAuthor(Guid authorId)
@@ -111,11 +147,33 @@ namespace PirateLibrary.API.Controllers
             {
                 return BadRequest();
             }
-            if (!service.AuthorExists(authorId)){
-                return BadRequest();
+            if (!service.AuthorExists(authorId))
+            {
+                return NotFound();
             }
 
-            return Ok(service.GetAuthor(authorId));
+            var author = service.GetAuthor(authorId);
+            if (author == null)
+            {
+                return NotFound();
+            }
+            return Ok(author);
+        }
+
+        [HttpOptions]
+        public IActionResult GetAuthorsOptions()
+        {
+            base.Response.Headers.Add("Allow", "GET, POST, OPTIONS, PATCH, DELETE");
+            return Ok();
+        }
+
+
+        public override ActionResult ValidationProblem(
+            [ActionResultObjectValue] ModelStateDictionary modelStateDictionary)
+        {
+            var options = HttpContext.RequestServices
+                .GetRequiredService<IOptions<ApiBehaviorOptions>>();
+            return (ActionResult)options.Value.InvalidModelStateResponseFactory(ControllerContext);
         }
     }
 }

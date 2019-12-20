@@ -6,6 +6,7 @@ using AutoMapper;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -36,14 +37,33 @@ namespace PirateLibrary.API
                     setup.SerializerSettings.ContractResolver =
                     new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver();
                 })
+                .ConfigureApiBehaviorOptions(setupAction =>
+                {
+                    setupAction.InvalidModelStateResponseFactory = context =>
+                   {
+                       var problemDetails = new ValidationProblemDetails(context.ModelState)
+                       {
+                           Title = "One or more model validation errors occurred,",
+                           Type = "http://coursel.com/blah",
+                           Status = StatusCodes.Status422UnprocessableEntity,
+                           Detail = "See errors property for details",
+                           Instance = context.HttpContext.Request.Path
+                       };
+                       problemDetails.Extensions.Add("traceId", context.HttpContext.TraceIdentifier);
+                       return new UnprocessableEntityObjectResult(problemDetails)
+                       {
+                           ContentTypes = { "application/problem+json" }
+                       };
+                   };
+                })
                 ;
             services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
             services.AddScoped<IPirateRepository, PirateRepository>();
 
             services.AddDbContext<PirateLibraryContext>(options =>
             {
-                options.UseSqlite("Data Source=memory;");
-              //  options.UseSqlServer(@"Server=(localdb)\mssqllocaldb;Database=PirateLibraryDb;Trusted_Connection=True;");
+                  options.UseSqlite("Data Source=memory;");
+               // options.UseSqlServer(@"Server=(localdb)\mssqllocaldb;Database=PirateLibraryDb2;Trusted_Connection=True;");
             });
         }
 

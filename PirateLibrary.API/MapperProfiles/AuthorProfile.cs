@@ -19,6 +19,9 @@ namespace PirateLibrary.API.Migrations
                     dest => dest.Age,
                     sou => sou.MapFrom(src => src.DateOfBirth.GetAge())
                 );
+            CreateMap<Models.AuthorForCreationDto, Entities.Author>();
+            CreateMap<Models.AuthorForUpdateDto, Entities.Author>();
+            CreateMap<Entities.Author, Models.AuthorForUpdateDto>();
         }
     }
 }
